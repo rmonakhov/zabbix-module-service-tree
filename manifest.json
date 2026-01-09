@@ -9,11 +9,11 @@
     "actions": {
         "treeservice.view": {
             "class": "CControllerTreeServiceView",
-            "view": "module.monitoring.treeservice.view"
+            "view": "module.services.treeservice.view"
         },
         "treeservice.view.refresh": {
             "class": "CControllerTreeServiceViewRefresh",
-            "view": "module.monitoring.treeservice.view.refresh",
+            "view": "module.services.treeservice.view.refresh",
             "layout": "layout.json"
         }
     }

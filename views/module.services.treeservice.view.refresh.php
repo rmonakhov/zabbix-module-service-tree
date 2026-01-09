@@ -21,7 +21,7 @@
 
 // Render only the tree partial for AJAX refresh.
 $output = [
-	'body' => (new CPartial('module.monitoring.tree.view.html', $data))->getOutput()
+	'body' => (new CPartial('module.services.tree.view.html', $data))->getOutput()
 ];
 
 if (($messages = getMessages()) !== null) {
