@@ -56,8 +56,13 @@
 				}
 			}
 
+			if (this.restoreFilterFromCookie()) {
+				return;
+			}
+
 			this.initTabFilter(filter_options);
 			this.initFilterControls();
+			this.initFilterToggle();
 
 			this.host_view_form = $('form[name=host_view]');
 			this.running = true;
@@ -324,6 +329,18 @@
 			this.refresh_url.unsetArgument('page');
 		},
 
+		initFilterToggle() {
+			const $toggle = $('.js-filter-toggle');
+			if (!$toggle.length) {
+				return;
+			}
+			const $container = $toggle.closest('.filter-container');
+			$toggle.on('click', (event) => {
+				event.preventDefault();
+				$container.toggleClass('is-collapsed');
+			});
+		},
+
 		initFilterControls() {
 			const $filter = $('form[name="filter"]');
 			if (!$filter.length) {
@@ -334,7 +351,75 @@
 				this.applyColumnVisibilityFromForm();
 			});
 
+			$filter.on('submit', () => {
+				this.storeFilterSelection();
+			});
+
+			$filter.on('click', '#filter_reset', () => {
+				this.clearFilterCookies();
+			});
+
 			this.applyColumnVisibilityFromForm();
+		},
+
+		getSelectedStatuses() {
+			const statuses = [];
+			$('form[name="filter"] input[name="status[]"]:checked').each(function() {
+				statuses.push($(this).val());
+			});
+			return statuses;
+		},
+
+		setStatusCheckboxes(statuses) {
+			const set = new Set(statuses);
+			$('form[name="filter"] input[name="status[]"]').each(function() {
+				$(this).prop('checked', set.has($(this).val()));
+			});
+		},
+
+		restoreFilterFromCookie() {
+			const $filter = $('form[name="filter"]');
+			if (!$filter.length) {
+				return false;
+			}
+			const params = new URLSearchParams(window.location.search);
+			const has_filter = params.has('cols[]') || params.has('status[]')
+				|| params.has('only_problems') || params.has('show_path');
+			if (has_filter) {
+				return false;
+			}
+			const cols = this.getCookie('treeservice_filter_cols');
+			const status = this.getCookie('treeservice_filter_status');
+			const onlyProblems = this.getCookie('treeservice_filter_only_problems');
+			const showPath = this.getCookie('treeservice_filter_show_path');
+			if (!cols && !status && !onlyProblems && !showPath) {
+				return false;
+			}
+			if (cols) {
+				this.setColumnCheckboxes(cols.split(',').filter(Boolean));
+			}
+			if (status) {
+				this.setStatusCheckboxes(status.split(',').filter(Boolean));
+			}
+			if (onlyProblems === '1') {
+				$filter.find('input[name="only_problems"]').prop('checked', true);
+			}
+			if (showPath === '1') {
+				$filter.find('input[name="show_path"]').prop('checked', true);
+			}
+			$filter.trigger('submit');
+			return true;
+		},
+
+		storeFilterSelection() {
+			const cols = this.getSelectedColumns();
+			const statuses = this.getSelectedStatuses();
+			const onlyProblems = $('form[name="filter"] input[name="only_problems"]').is(':checked') ? '1' : '';
+			const showPath = $('form[name="filter"] input[name="show_path"]').is(':checked') ? '1' : '';
+			this.setCookie('treeservice_filter_cols', cols.join(','), 30);
+			this.setCookie('treeservice_filter_status', statuses.join(','), 30);
+			this.setCookie('treeservice_filter_only_problems', onlyProblems, 30);
+			this.setCookie('treeservice_filter_show_path', showPath, 30);
 		},
 
 		getSelectedColumns() {
@@ -384,6 +469,13 @@
 					$(this).hide();
 				}
 			});
+		},
+
+		clearFilterCookies() {
+			this.setCookie('treeservice_filter_cols', '', -1);
+			this.setCookie('treeservice_filter_status', '', -1);
+			this.setCookie('treeservice_filter_only_problems', '', -1);
+			this.setCookie('treeservice_filter_show_path', '', -1);
 		},
 
 		setCookie(name, value, days) {

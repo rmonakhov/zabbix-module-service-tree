@@ -37,6 +37,8 @@ class CControllerTreeServiceView extends CControllerTreeService {
 			'name' =>			'string',
 			'status' =>			'array',
 			'cols' =>			'array',
+			'only_problems' =>			'in 0,1',
+			'show_path' =>			'in 0,1',
 			'sort' =>			'in name',
 			'sortorder' =>			'in '.ZBX_SORT_UP.','.ZBX_SORT_DOWN,
 			'page' =>			'ge 1',

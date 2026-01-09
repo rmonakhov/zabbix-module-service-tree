@@ -70,13 +70,27 @@ if ($web_layout_mode == ZBX_LAYOUT_NORMAL) {
 		->setAttribute('action', 'zabbix.php')
 		->addItem(new CVar('action', 'treeservice.view'));
 
-	$form_list = new CFormList('treeserviceFilterList');
-	$form_list->addRow(
+	$left_list = new CFormList('treeserviceFilterLeft');
+	$left_list->addRow(
 		new CLabel(_('Service name'), 'filter_name'),
 		(new CTextBox('name', $data['filter']['name']))
 			->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH)
 			->setAttribute('id', 'filter_name')
+			->setAttribute('placeholder', _('type here to search'))
 	);
+
+	$options_list = new CList();
+	$only_problems = (new CCheckBox('only_problems', '1'))
+		->setId('only_problems')
+		->setChecked(!empty($data['filter']['only_problems']));
+	$options_list->addItem(new CListItem([$only_problems, new CLabel(_('Only show problems'), 'only_problems')]));
+	$show_path = (new CCheckBox('show_path', '1'))
+		->setId('show_path')
+		->setChecked(!empty($data['filter']['show_path']));
+	$options_list->addItem(new CListItem([$show_path, new CLabel(_('Show breadcrumb path'), 'show_path')]));
+	$options_list->addClass('filter-options');
+	$left_list->addRow(new CLabel(_('Options')), $options_list);
+
 	$status_options = [
 		-1 => _('OK'),
 		0 => _('Not classified'),
@@ -95,20 +109,37 @@ if ($web_layout_mode == ZBX_LAYOUT_NORMAL) {
 	}
 	$status_list->addClass('filter-status');
 
-	$form_list->addRow(new CLabel(_('Status')), $status_list);
-	$form_list->addRow(new CLabel(_('Columns')), $cols_list);
+	$right_list = new CFormList('treeserviceFilterRight');
+	$right_list->addRow(new CLabel(_('Status')), $status_list);
 
-	$filter_form->addItem($form_list);
+	$right_list->addRow(new CLabel(_('Columns')), $cols_list);
+
+	$filter_form->addItem(
+		(new CDiv([
+			(new CDiv($left_list))->addClass('filter-left'),
+			(new CDiv($right_list))->addClass('filter-right')
+		]))->addClass('filter-grid')
+	);
 	$filter_form->addItem(
 		(new CDiv([
 			(new CSubmit('filter_set', _('Apply')))->addClass(ZBX_STYLE_BTN),
 			(new CRedirectButton(_('Reset'), (new CUrl('zabbix.php'))->setArgument('action', 'treeservice.view')->getUrl()))
+				->setId('filter_reset')
 				->addClass(ZBX_STYLE_BTN_ALT)
 		]))->addClass('filter-forms-footer')
 	);
 
+	$filter_toggle = (new CLink('', '#'))
+		->addClass('tabfilter-item-link')
+		->addClass('js-filter-toggle')
+		->addItem((new CSpan())->addClass('zi-filter'))
+		->setAttribute('aria-label', _('Toggle filter'));
+
 	$widget->addItem(
-		(new CDiv($filter_form))
+		(new CDiv([
+			(new CDiv($filter_toggle))->addClass('filter-toggle'),
+			(new CDiv($filter_form))->addClass('filter-body')
+		]))
 			->addClass('filter-container')
 			->addClass('service-filter')
 	);

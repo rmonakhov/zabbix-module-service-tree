@@ -96,6 +96,10 @@ function addServiceRow(array $data, array &$rows, string $serviceid, int $level,
 		$service_link->setArgument('path', $service['path']);
 	}
 	$name_col->addItem(new CLink($service['name'], $service_link));
+	if (!empty($data['filter']['show_path']) && !empty($service['path_names'])) {
+		$name_col->addItem((new CSpan(' ('.implode(' / ', $service['path_names']).')'))
+			->addClass('service-breadcrumb'));
+	}
 
 	$service_status_value = array_key_exists('status_calc', $service) ? $service['status_calc'] : $service['status'];
 	$status_meta = getServiceStatusMeta($service_status_value);
@@ -131,6 +135,14 @@ function addServiceRow(array $data, array &$rows, string $serviceid, int $level,
 		if ($downtime_sec > ($error_budget_sec / 2)) {
 			$downtime_class = ZBX_STYLE_RED;
 		}
+	}
+	$downtime_style = '';
+	if ($downtime_sec !== null && $downtime_sec > 0) {
+		$downtime_style = 'color: #d9534f;';
+	}
+	$error_budget_style = '';
+	if ($error_budget_sec !== null && $error_budget_sec < 0) {
+		$error_budget_style = 'color: #f0ad4e;';
 	}
 	$root_cause_items = [];
 	if (array_key_exists('root_causes', $service) && $service['root_causes']) {
@@ -180,8 +192,11 @@ function addServiceRow(array $data, array &$rows, string $serviceid, int $level,
 		(new CCol($sla_name_cell))->setAttribute('data-col', 'sla_name'),
 		(new CCol($uptime))->setAttribute('data-col', 'uptime'),
 		($downtime_class ? (new CCol($downtime))->addClass($downtime_class) : new CCol($downtime))
+			->addStyle($downtime_style)
 			->setAttribute('data-col', 'downtime'),
-		(new CCol($error_budget))->setAttribute('data-col', 'error_budget'),
+		(new CCol($error_budget))
+			->addStyle($error_budget_style)
+			->setAttribute('data-col', 'error_budget'),
 		(new CCol($root_cause_items))->setAttribute('data-col', 'root_cause')
 	]);
 

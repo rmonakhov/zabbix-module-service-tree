@@ -34,6 +34,8 @@ abstract class CControllerTreeService extends CController {
 	const FILTER_FIELDS_DEFAULT = [
 		'name' => '',
 		'status' => [],
+		'only_problems' => 0,
+		'show_path' => 0,
 		'cols' => [
 			'sla',
 			'slo',
@@ -80,6 +82,9 @@ abstract class CControllerTreeService extends CController {
 		$services_by_id = [];
 		$status_filter = array_map('intval', $filter['status'] ?? []);
 		foreach ($services as $service) {
+			if ($filter['only_problems'] && (int) $service['status'] === -1) {
+				continue;
+			}
 			if ($status_filter && !in_array((int) $service['status'], $status_filter, true)) {
 				continue;
 			}
@@ -102,6 +107,14 @@ abstract class CControllerTreeService extends CController {
 			$missing_parent_ids = $this->collectMissingParentIds($services_by_id);
 		}
 
+		if ($filter['only_problems']) {
+			foreach ($services_by_id as $serviceid => $service) {
+				if ((int) $service['status'] === -1) {
+					unset($services_by_id[$serviceid]);
+				}
+			}
+		}
+
 		foreach ($services_by_id as &$service) {
 			$service['parent_serviceid'] = $service['parents']
 				? $service['parents'][0]['serviceid']
@@ -120,6 +133,7 @@ abstract class CControllerTreeService extends CController {
 		}
 		foreach ($services_by_id as $serviceid => &$service) {
 			$service['path'] = $this->buildServicePath($services_by_id, $serviceid);
+			$service['path_names'] = $this->buildServicePathNames($services_by_id, $serviceid);
 		}
 		unset($service);
 
@@ -252,6 +266,20 @@ abstract class CControllerTreeService extends CController {
 		}
 
 		return $path;
+	}
+
+	private function buildServicePathNames(array $services_by_id, $serviceid): array {
+		$path_ids = $this->buildServicePath($services_by_id, $serviceid);
+		$names = [];
+
+		foreach ($path_ids as $path_id) {
+			if (!array_key_exists($path_id, $services_by_id)) {
+				continue;
+			}
+			$names[] = $services_by_id[$path_id]['name'] ?? '';
+		}
+
+		return array_values(array_filter($names, 'strlen'));
 	}
 
 	private function getSlaDataForServices(array $service_ids): array {
@@ -423,6 +451,12 @@ abstract class CControllerTreeService extends CController {
 	protected function cleanInput(array $input): array {
 		if (!array_key_exists('status', $input) || !is_array($input['status'])) {
 			$input['status'] = [];
+		}
+		if (!array_key_exists('only_problems', $input)) {
+			$input['only_problems'] = 0;
+		}
+		if (!array_key_exists('show_path', $input)) {
+			$input['show_path'] = 0;
 		}
 
 		if (!array_key_exists('cols', $input) || !is_array($input['cols'])) {
