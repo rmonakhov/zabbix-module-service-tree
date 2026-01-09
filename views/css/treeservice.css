@@ -80,8 +80,6 @@
   display: block;
   color: #768d99; }
 
-
-
 .tree-actions {
   margin: 10px 0 10px 0;
 }
@@ -101,7 +99,7 @@
   color: #768d99;
   font-size: 11px;
   margin-left: 6px; }
-  
+
 .filter-grid {
   display: grid;
   grid-template-columns: minmax(280px, 1fr) minmax(240px, 1fr);

@@ -109,6 +109,18 @@ $collapse_all = (new CButton('collapse_all', _('Collapse all')))
 	->addClass('js-collapse-all');
 $form->addItem((new CDiv([$expand_all, $collapse_all]))->addClass('tree-actions'));
 $form->addItem($table);
+$total_services = array_key_exists('services', $data) ? count($data['services']) : 0;
+$paging = new CDiv(
+	(new CTag('nav', true,
+		(new CDiv(_('Displaying ').$total_services.' '._('services')))->addClass('table-stats')
+	))
+		->addClass('paging-btn-container')
+		->setAttribute('role', 'navigation')
+		->setAttribute('aria-label', _('Pager'))
+);
+$paging->addClass('table-paging');
+$form->addItem($paging);
+
 $form->addItem((new CDiv([$expand_all, $collapse_all]))->addClass('tree-actions'));
 echo $form;
 

@@ -42,7 +42,7 @@ $controls_list->addItem((new CDiv(_('Last refreshed: ').zbx_date2str(DATE_TIME_F
 	->addClass('last-refreshed'));
 
 $controls_list->addItem(
-	(new CLink(_('Export CSV'), '#'))
+	(new CLink(_('Export to CSV'), '#'))
 		->addClass(ZBX_STYLE_BTN)
 		->addClass('js-export-csv')
 );

@@ -217,6 +217,12 @@ abstract class CControllerTreeService extends CController {
 			return $this->compareServices($services_by_id, $a, $b, $filter);
 		});
 
+		$root_causes = $load_root_cause ? $this->getRootCauses($services_by_id, $visible_service_ids) : [];
+		foreach ($services_by_id as $serviceid => &$service) {
+			$service['root_causes'] = $root_causes[$serviceid] ?? [];
+		}
+		unset($service);
+
 		$status_summary = [
 			-1 => 0,
 			0 => 0,
