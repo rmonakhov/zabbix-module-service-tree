@@ -19,6 +19,7 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+// Render only the tree partial for AJAX refresh.
 $output = [
 	'body' => (new CPartial('module.monitoring.tree.view.html', $data))->getOutput()
 ];

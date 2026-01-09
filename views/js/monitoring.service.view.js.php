@@ -39,6 +39,7 @@
 		_popup_message_box: null,
 
 		init({filter_options, refresh_url, refresh_interval}) {
+			// Initialize refresh URL, filters, and auto-refresh.
 			this.refresh_url = new Curl(refresh_url, false);
 			this.refresh_interval = refresh_interval;
 
@@ -70,6 +71,7 @@
 			this.refresh();
 		},
 
+		// Initialize optional tab filter (when enabled).
 		initTabFilter(filter_options) {
 			if (!filter_options) {
 				return;
@@ -82,6 +84,7 @@
 			this.refresh_counters = this.createCountersRefresh(1);
 		},
 
+		// Schedule periodic counters refresh.
 		createCountersRefresh(timeout) {
 			if (this.refresh_counters) {
 				clearTimeout(this.refresh_counters);
@@ -91,6 +94,7 @@
 			return setTimeout(() => this.getFiltersCounters(), timeout);
 		},
 
+		// Fetch filter counters for tab filter.
 		getFiltersCounters() {
 			if (!this.filter) {
 				return;
@@ -111,6 +115,7 @@
 			});
 		},
 
+		// Refresh the table and update counters.
 		reloadPartialAndTabCounters() {
 			this.refresh_url = new Curl('', false);
 
@@ -162,6 +167,7 @@
 			}
 		},
 
+		// Load the tree partial via AJAX.
 		refresh() {
 			this.setLoading();
 			const params = this.refresh_url.getArgumentsObject();
@@ -268,6 +274,7 @@
 			}
 		},
 
+		// Update expanded services in refresh URL and cookie.
 		serviceToFromRefreshUrl(serviceid, collapsed) {
 			this.refresh_url.unsetArgument('expanded_services');
 			const regex = /\&expanded_services=([\d,]+)/g;
@@ -313,6 +320,7 @@
 			}
 		},
 
+		// Set expanded services list and persist to cookie.
 		setExpandedServices(serviceIds) {
 			this.refresh_url.unsetArgument('expanded_services');
 			const regex = /\&expanded_services=([\d,]+)/g;
@@ -330,6 +338,7 @@
 			this.refresh_url.unsetArgument('page');
 		},
 
+		// Handle filter collapse/expand toggle.
 		initFilterToggle() {
 			const $toggle = $('.js-filter-toggle');
 			if (!$toggle.length) {
@@ -342,6 +351,7 @@
 			});
 		},
 
+		// Bind CSV export button.
 		initExportCsv() {
 			const $button = $('.js-export-csv');
 			if (!$button.length) {
@@ -353,6 +363,7 @@
 			});
 		},
 
+		// Export current visible table, using data attributes for full paths and root causes.
 		exportTableCsv() {
 			const $table = $('.services-tree');
 			if (!$table.length) {
@@ -412,6 +423,7 @@
 			URL.revokeObjectURL(url);
 		},
 
+		// Escape values for CSV output.
 		csvEscape(value) {
 			const stringValue = String(value ?? '');
 			if (/[",\n]/.test(stringValue)) {
@@ -420,6 +432,7 @@
 			return stringValue;
 		},
 
+		// Wire filter controls and column visibility.
 		initFilterControls() {
 			const $filter = $('form[name="filter"]');
 			if (!$filter.length) {
@@ -441,6 +454,7 @@
 			this.applyColumnVisibilityFromForm();
 		},
 
+		// Collect selected status values from filter.
 		getSelectedStatuses() {
 			const statuses = [];
 			$('form[name="filter"] input[name="status[]"]:checked').each(function() {
@@ -449,6 +463,7 @@
 			return statuses;
 		},
 
+		// Apply status selection to checkboxes.
 		setStatusCheckboxes(statuses) {
 			const set = new Set(statuses);
 			$('form[name="filter"] input[name="status[]"]').each(function() {
@@ -456,6 +471,7 @@
 			});
 		},
 
+		// Restore filter selections from cookies.
 		restoreFilterFromCookie() {
 			const $filter = $('form[name="filter"]');
 			if (!$filter.length) {
@@ -494,6 +510,7 @@
 			return true;
 		},
 
+		// Persist filter selections in cookies for next visit.
 		storeFilterSelection() {
 			const cols = this.getSelectedColumns();
 			const statuses = this.getSelectedStatuses();
@@ -510,14 +527,6 @@
 		getSelectedColumns() {
 			const cols = [];
 			$('form[name="filter"] input[name="cols[]"]:checked').each(function() {
-				cols.push($(this).val());
-			});
-			return cols;
-		},
-
-		getAllColumns() {
-			const cols = [];
-			$('form[name="filter"] input[name="cols[]"]').each(function() {
 				cols.push($(this).val());
 			});
 			return cols;
@@ -556,6 +565,7 @@
 			});
 		},
 
+		// Clear persisted filter cookies.
 		clearFilterCookies() {
 			this.setCookie('treeservice_filter_cols', '', -1);
 			this.setCookie('treeservice_filter_status', '', -1);
@@ -564,6 +574,7 @@
 			this.setCookie('treeservice_filter_only_with_sla', '', -1);
 		},
 
+		// Write a cookie value.
 		setCookie(name, value, days) {
 			let expires = '';
 			if (days) {
@@ -574,6 +585,7 @@
 			document.cookie = name + '=' + encodeURIComponent(value) + expires + '; path=/';
 		},
 
+		// Read a cookie value.
 		getCookie(name) {
 			const name_eq = name + '=';
 			const parts = document.cookie.split(';');

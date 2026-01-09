@@ -25,11 +25,12 @@ use CControllerResponseData;
 use CUrl;
 
 /**
- * Controller for the "Host->Monitoring" asynchronous refresh page.
+ * Controller for the Services tree asynchronous refresh endpoint.
  */
 class CControllerTreeServiceViewRefresh extends CControllerTreeServiceView {
 
 	protected function doAction(): void {
+		// Build refresh data for the tree partial.
 		$filter = static::FILTER_FIELDS_DEFAULT;
 		$this->getInputs($filter, array_keys($filter));
 		$filter = $this->cleanInput($filter);

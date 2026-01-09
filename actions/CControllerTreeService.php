@@ -63,6 +63,7 @@ abstract class CControllerTreeService extends CController {
 	 * @return array
 	 */
 	protected function getData(array $filter, array $expanded_services): array {
+		// Build and enrich the service tree based on filter and expansion state.
 		$service_params = [
 			'output' => ['serviceid', 'name', 'status'],
 			'selectParents' => ['serviceid'],
@@ -92,6 +93,7 @@ abstract class CControllerTreeService extends CController {
 			$services_by_id[$service['serviceid']] = $service;
 		}
 
+		// Ensure tree integrity by fetching missing parents for filtered services.
 		$missing_parent_ids = $this->collectMissingParentIds($services_by_id);
 		while ($missing_parent_ids) {
 			$parent_services = API::Service()->get([
@@ -108,6 +110,7 @@ abstract class CControllerTreeService extends CController {
 			$missing_parent_ids = $this->collectMissingParentIds($services_by_id);
 		}
 
+		// When SLA-only is enabled, keep SLA services and their ancestors.
 		$sla_data_prefetch = [];
 		if (!empty($filter['only_with_sla'])) {
 			$sla_data_prefetch = $this->getSlaDataForServices(array_keys($services_by_id));
@@ -135,6 +138,7 @@ abstract class CControllerTreeService extends CController {
 			}
 		}
 
+		// Build tree relationships and per-node metadata.
 		foreach ($services_by_id as &$service) {
 			$service['parent_serviceid'] = $service['parents']
 				? $service['parents'][0]['serviceid']
@@ -165,6 +169,7 @@ abstract class CControllerTreeService extends CController {
 		}
 		unset($service);
 
+		// Limit expensive data (SLA/root cause) to visible rows unless sorting by SLA.
 		$visible_service_ids = $this->collectVisibleServiceIds($services_by_id, $root_services);
 		$cols = $filter['cols'] ?? [];
 		if (in_array($filter['sort'] ?? 'name', ['sla', 'slo', 'sla_name', 'uptime', 'downtime', 'error_budget'], true)) {
@@ -246,6 +251,7 @@ abstract class CControllerTreeService extends CController {
 		];
 	}
 
+	// Sorts a list of arrays by a given key.
 	protected function array_sort($array, $on, $order='ASC')
 	{
 		if (!is_array($array)) {
@@ -283,6 +289,7 @@ abstract class CControllerTreeService extends CController {
 		return $new_array;
 	}
 
+	// Returns parent service IDs missing from the current map.
 	private function collectMissingParentIds(array $services_by_id): array {
 		$missing = [];
 		foreach ($services_by_id as $service) {
@@ -298,6 +305,7 @@ abstract class CControllerTreeService extends CController {
 		return array_keys($missing);
 	}
 
+	// Returns service IDs visible based on expanded/collapsed state.
 	private function collectVisibleServiceIds(array $services_by_id, array $root_services): array {
 		$visible = [];
 		$stack = $root_services;
@@ -320,6 +328,7 @@ abstract class CControllerTreeService extends CController {
 		return array_keys($visible);
 	}
 
+	// Compare two services using the current sort field/order.
 	private function compareServices(array $services_by_id, $a, $b, array $filter): int {
 		$sort = $filter['sort'] ?? 'name';
 		$order = $filter['sortorder'] ?? ZBX_SORT_UP;
@@ -344,6 +353,7 @@ abstract class CControllerTreeService extends CController {
 		return ($value_a < $value_b ? -1 : 1) * $direction;
 	}
 
+	// Extract a comparable value for sorting.
 	private function getSortValue(array $service, string $sort) {
 		switch ($sort) {
 			case 'sla':
@@ -364,6 +374,7 @@ abstract class CControllerTreeService extends CController {
 		}
 	}
 
+	// Build the list of ancestor service IDs for a given service.
 	private function buildServicePath(array $services_by_id, $serviceid): array {
 		$path = [];
 		$current_id = $serviceid;
@@ -380,6 +391,7 @@ abstract class CControllerTreeService extends CController {
 		return $path;
 	}
 
+	// Build the list of ancestor service names for breadcrumb display.
 	private function buildServicePathNames(array $services_by_id, $serviceid): array {
 		$path_ids = $this->buildServicePath($services_by_id, $serviceid);
 		$names = [];
@@ -394,6 +406,7 @@ abstract class CControllerTreeService extends CController {
 		return array_values(array_filter($names, 'strlen'));
 	}
 
+	// Fetch SLA data for the given services and normalize fields.
 	private function getSlaDataForServices(array $service_ids): array {
 		if (!class_exists('API') || !method_exists('API', 'SLA')) {
 			return [];
@@ -457,6 +470,7 @@ abstract class CControllerTreeService extends CController {
 		return $slis_by_service;
 	}
 
+	// Resolve root cause problems based on service problem tags.
 	private function getRootCauses(array $services_by_id, array $service_ids = []): array {
 		if ($service_ids) {
 			$services_by_id = array_intersect_key($services_by_id, array_flip($service_ids));
@@ -512,6 +526,7 @@ abstract class CControllerTreeService extends CController {
 		return $by_service;
 	}
 
+	// Format duration in a human-readable form without rounding.
 	private function formatDuration(int $seconds): string {
 		$is_negative = $seconds < 0;
 		$abs_seconds = abs($seconds);
@@ -550,6 +565,7 @@ abstract class CControllerTreeService extends CController {
 	 *
 	 * @return array
 	 */
+	// Hook for additional filter data (unused).
 	protected function getAdditionalData($filter): array {
 		$data = [];
 
@@ -563,6 +579,7 @@ abstract class CControllerTreeService extends CController {
 	 *
 	 * @return array
 	 */
+	// Normalize filter input arrays and defaults.
 	protected function cleanInput(array $input): array {
 		if (!array_key_exists('status', $input) || !is_array($input['status'])) {
 			$input['status'] = [];

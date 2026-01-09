@@ -35,6 +35,7 @@ $this->includeJsFile('monitoring.service.view.js.php');
 $this->enableLayoutModes();
 $web_layout_mode = $this->getLayoutMode();
 
+// Top-right controls (export + kiosk mode).
 $controls_list = new CList();
 
 $last_refreshed = $data['last_refreshed'] ?? time();
@@ -48,6 +49,7 @@ $controls_list->addItem(
 );
 $controls_list->addItem(get_icon('kioskmode', ['mode' => $web_layout_mode]));
 
+// Page header and top controls.
 $widget = (new CHtmlPage())
 	->setTitle(_('Services tree'))
 	->setWebLayoutMode($web_layout_mode)
@@ -77,7 +79,8 @@ if ($web_layout_mode == ZBX_LAYOUT_NORMAL) {
 	}
 	$cols_list->addClass('filter-columns');
 
-	$filter_form = (new CForm())
+	// Filter form (search, options, status, columns).
+$filter_form = (new CForm())
 		->setName('filter')
 		->setMethod('get')
 		->setAttribute('action', 'zabbix.php')
@@ -146,7 +149,8 @@ if ($web_layout_mode == ZBX_LAYOUT_NORMAL) {
 		]))->addClass('filter-forms-footer')
 	);
 
-	$filter_toggle = (new CLink('', '#'))
+	// Filter container with collapse toggle and form body.
+$filter_toggle = (new CLink('', '#'))
 		->addClass('tabfilter-item-link')
 		->addClass('js-filter-toggle')
 		->addItem((new CSpan())->addClass('zi-filter'))
@@ -169,6 +173,7 @@ $widget->show();
 
 $this->addCssFile('modules/zabbix-module-service-tree/views/css/treeservice.css');
 
+// Initialize JS view with refresh settings.
 (new CScriptTag('
 	view.init('.json_encode([
 		'filter_options' => $data['filter_options'],

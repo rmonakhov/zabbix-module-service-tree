@@ -26,6 +26,7 @@ $table = (new CTableInfo())->addClass('services-tree');
 
 $view_url = $data['view_curl']->getUrl();
 
+// Status summary bar data.
 $status_options = [
 	-1 => ['label' => _('OK'), 'class' => ZBX_STYLE_GREEN],
 	0 => ['label' => _('Not classified'), 'class' => CSeverityHelper::getStatusStyle(0)],
@@ -55,6 +56,7 @@ foreach ($status_options as $status_value => $meta) {
 }
 $status_list->addClass('status-summary');
 
+// Table header with sortable SLA columns.
 $sla_header = make_sorting_header(_('SLA (%)'), 'sla', $data['sort'], $data['sortorder'], $view_url);
 $sla_header = $sla_header instanceof CColHeader ? $sla_header : (new CColHeader($sla_header));
 $sla_header->setAttribute('data-col', 'sla');
@@ -79,6 +81,7 @@ $error_budget_header = make_sorting_header(_('Error Budget'), 'error_budget', $d
 $error_budget_header = $error_budget_header instanceof CColHeader ? $error_budget_header : (new CColHeader($error_budget_header));
 $error_budget_header->setAttribute('data-col', 'error_budget');
 
+// Table header with sortable columns.
 $table->setHeader([
 	make_sorting_header(_('Name'), 'name', $data['sort'], $data['sortorder'], $view_url),
 	(new CColHeader(_('Status'))),
@@ -91,6 +94,7 @@ $table->setHeader([
 	(new CColHeader(_('Root cause')))->setAttribute('data-col', 'root_cause')
 ]);
 
+// Render tree rows.
 foreach ($data['root_services'] as $serviceid) {
 	$rows = [];
 	addServiceRow($data, $rows, $serviceid, 0, false);
@@ -101,6 +105,7 @@ foreach ($data['root_services'] as $serviceid) {
 
 $form->addItem((new CDiv($status_list))->addClass('status-summary-wrap'));
 
+// Action buttons below and above the table.
 $expand_all = (new CButton('expand_all', _('Expand all')))
 	->addClass(ZBX_STYLE_BTN_ALT)
 	->addClass('js-expand-all');
@@ -109,6 +114,7 @@ $collapse_all = (new CButton('collapse_all', _('Collapse all')))
 	->addClass('js-collapse-all');
 $form->addItem((new CDiv([$expand_all, $collapse_all]))->addClass('tree-actions'));
 $form->addItem($table);
+// Paging footer with total count.
 $total_services = array_key_exists('services', $data) ? count($data['services']) : 0;
 $paging = new CDiv(
 	(new CTag('nav', true,
@@ -124,6 +130,7 @@ $form->addItem($paging);
 $form->addItem((new CDiv([$expand_all, $collapse_all]))->addClass('tree-actions'));
 echo $form;
 
+// Render a single service row and recurse into children.
 function addServiceRow(array $data, array &$rows, string $serviceid, int $level, bool $parent_collapsed): void {
 	if (!array_key_exists($serviceid, $data['services'])) {
 		return;
@@ -312,6 +319,7 @@ function addServiceRow(array $data, array &$rows, string $serviceid, int $level,
 	}
 }
 
+// Attach parent service ID as data attribute for collapse handling.
 function addParentServiceClass(array $data, &$element, string $parent_serviceid): void {
 	if ($parent_serviceid !== '0' && array_key_exists($parent_serviceid, $data['services'])) {
 		$element->setAttribute(
@@ -321,10 +329,12 @@ function addParentServiceClass(array $data, &$element, string $parent_serviceid)
 	}
 }
 
+// Non-breaking space helper for indentation.
 function NBSP_BG(): CHtmlEntityBG {
 	return new CHtmlEntityBG('&nbsp;');
 }
 
+// Lightweight HTML entity wrapper for spacing.
 class CHtmlEntityBG {
 	private $entity = '';
 	public function __construct(string $entity) {
@@ -335,6 +345,7 @@ class CHtmlEntityBG {
 	}
 }
 
+// Map service status to label/style.
 function getServiceStatusMeta($status): array {
 	$status = (int) $status;
 	if ($status == -1) {

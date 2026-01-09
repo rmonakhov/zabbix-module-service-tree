@@ -28,11 +28,14 @@ use CUrl;
 
 class CControllerTreeServiceView extends CControllerTreeService {
 
+	// Disable CSRF since this view uses GET and refresh endpoints.
 	protected function init(): void {
 		$this->disableCsrfValidation();
 	}
 
+	// Validate filter and sorting parameters.
 	protected function checkInput(): bool {
+		// Validate filter and sorting parameters.
 		$fields = [
 			'name' =>			'string',
 			'status' =>			'array',
@@ -55,11 +58,14 @@ class CControllerTreeServiceView extends CControllerTreeService {
 		return $ret;
 	}
 
+	// Reuse standard permissions for Services access.
 	protected function checkPermissions(): bool {
 		return $this->checkAccess(CRoleHelper::UI_MONITORING_HOSTS);
 	}
 
+	// Build initial page data and refresh URL.
 	protected function doAction(): void {
+		// Build initial page data and refresh URL.
 		$filter = static::FILTER_FIELDS_DEFAULT;
 		$this->getInputs($filter, array_keys($filter));
 		$filter = $this->cleanInput($filter);
