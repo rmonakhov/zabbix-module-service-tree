@@ -101,11 +101,14 @@
   color: #768d99;
   font-size: 11px;
   margin-left: 6px; }
+  
 .filter-grid {
   display: grid;
   grid-template-columns: minmax(280px, 1fr) minmax(240px, 1fr);
   gap: 12px 24px;
-  align-items: start; }
+  align-items: start;
+  margin: 0 10% auto;
+}
 
 .filter-left .form-field,
 .filter-right .form-field {
@@ -188,5 +191,11 @@ margin: 22px 0 0 13px;}
 background-color:#42a447;
 }
 .status-summary-count.status-summary-total {
-  background: #768d99; }
+  background: #768d99;
+}
 
+.last-refreshed {
+  color: #768d99;
+  font-size: 12px;
+  margin: 5px 0 5px 0;
+ }

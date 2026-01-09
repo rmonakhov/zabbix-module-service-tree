@@ -55,15 +55,39 @@ foreach ($status_options as $status_value => $meta) {
 }
 $status_list->addClass('status-summary');
 
+$sla_header = make_sorting_header(_('SLA (%)'), 'sla', $data['sort'], $data['sortorder'], $view_url);
+$sla_header = $sla_header instanceof CColHeader ? $sla_header : (new CColHeader($sla_header));
+$sla_header->setAttribute('data-col', 'sla');
+
+$slo_header = make_sorting_header(_('SLO (%)'), 'slo', $data['sort'], $data['sortorder'], $view_url);
+$slo_header = $slo_header instanceof CColHeader ? $slo_header : (new CColHeader($slo_header));
+$slo_header->setAttribute('data-col', 'slo');
+
+$sla_name_header = make_sorting_header(_('SLA Name'), 'sla_name', $data['sort'], $data['sortorder'], $view_url);
+$sla_name_header = $sla_name_header instanceof CColHeader ? $sla_name_header : (new CColHeader($sla_name_header));
+$sla_name_header->setAttribute('data-col', 'sla_name');
+
+$uptime_header = make_sorting_header(_('Uptime'), 'uptime', $data['sort'], $data['sortorder'], $view_url);
+$uptime_header = $uptime_header instanceof CColHeader ? $uptime_header : (new CColHeader($uptime_header));
+$uptime_header->setAttribute('data-col', 'uptime');
+
+$downtime_header = make_sorting_header(_('Downtime'), 'downtime', $data['sort'], $data['sortorder'], $view_url);
+$downtime_header = $downtime_header instanceof CColHeader ? $downtime_header : (new CColHeader($downtime_header));
+$downtime_header->setAttribute('data-col', 'downtime');
+
+$error_budget_header = make_sorting_header(_('Error Budget'), 'error_budget', $data['sort'], $data['sortorder'], $view_url);
+$error_budget_header = $error_budget_header instanceof CColHeader ? $error_budget_header : (new CColHeader($error_budget_header));
+$error_budget_header->setAttribute('data-col', 'error_budget');
+
 $table->setHeader([
 	make_sorting_header(_('Name'), 'name', $data['sort'], $data['sortorder'], $view_url),
 	(new CColHeader(_('Status'))),
-	(new CColHeader(_('SLA (%)')))->setAttribute('data-col', 'sla'),
-	(new CColHeader(_('SLO (%)')))->setAttribute('data-col', 'slo'),
-	(new CColHeader(_('SLA Name')))->setAttribute('data-col', 'sla_name'),
-	(new CColHeader(_('Uptime')))->setAttribute('data-col', 'uptime'),
-	(new CColHeader(_('Downtime')))->setAttribute('data-col', 'downtime'),
-	(new CColHeader(_('Error Budget')))->setAttribute('data-col', 'error_budget'),
+	$sla_header,
+	$slo_header,
+	$sla_name_header,
+	$uptime_header,
+	$downtime_header,
+	$error_budget_header,
 	(new CColHeader(_('Root cause')))->setAttribute('data-col', 'root_cause')
 ]);
 

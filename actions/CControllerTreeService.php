@@ -135,14 +135,6 @@ abstract class CControllerTreeService extends CController {
 			}
 		}
 
-		if ($filter['only_problems']) {
-			foreach ($services_by_id as $serviceid => $service) {
-				if ((int) $service['status'] === -1) {
-					unset($services_by_id[$serviceid]);
-				}
-			}
-		}
-
 		foreach ($services_by_id as &$service) {
 			$service['parent_serviceid'] = $service['parents']
 				? $service['parents'][0]['serviceid']
@@ -159,26 +151,6 @@ abstract class CControllerTreeService extends CController {
 				$services_by_id[$parent_id]['children'][] = $serviceid;
 			}
 		}
-		foreach ($services_by_id as $serviceid => &$service) {
-			$service['path'] = $this->buildServicePath($services_by_id, $serviceid);
-			$service['path_names'] = $this->buildServicePathNames($services_by_id, $serviceid);
-		}
-		unset($service);
-
-		foreach ($services_by_id as $serviceid => &$service) {
-			if (!$service['children']) {
-				continue;
-			}
-			usort($service['children'], function($a, $b) use ($services_by_id, $filter) {
-				$name_a = $services_by_id[$a]['name'] ?? '';
-				$name_b = $services_by_id[$b]['name'] ?? '';
-				if ($filter['sortorder'] === 'DESC') {
-					return strnatcasecmp($name_b, $name_a);
-				}
-				return strnatcasecmp($name_a, $name_b);
-			});
-		}
-		unset($service);
 
 		$root_services = [];
 		foreach ($services_by_id as $serviceid => $service) {
@@ -186,19 +158,24 @@ abstract class CControllerTreeService extends CController {
 				$root_services[] = $serviceid;
 			}
 		}
-		usort($root_services, function($a, $b) use ($services_by_id, $filter) {
-			$name_a = $services_by_id[$a]['name'] ?? '';
-			$name_b = $services_by_id[$b]['name'] ?? '';
-			if ($filter['sortorder'] === 'DESC') {
-				return strnatcasecmp($name_b, $name_a);
-			}
-			return strnatcasecmp($name_a, $name_b);
-		});
+
+		foreach ($services_by_id as $serviceid => &$service) {
+			$service['path'] = $this->buildServicePath($services_by_id, $serviceid);
+			$service['path_names'] = $this->buildServicePathNames($services_by_id, $serviceid);
+		}
+		unset($service);
 
 		$visible_service_ids = $this->collectVisibleServiceIds($services_by_id, $root_services);
 		$cols = $filter['cols'] ?? [];
-		$load_sla = array_intersect($cols, ['sla', 'slo', 'sla_name', 'uptime', 'downtime', 'error_budget']);
+		if (in_array($filter['sort'] ?? 'name', ['sla', 'slo', 'sla_name', 'uptime', 'downtime', 'error_budget'], true)) {
+			$visible_service_ids = array_keys($services_by_id);
+		}
+
+		$load_sla = (bool) array_intersect($cols, ['sla', 'slo', 'sla_name', 'uptime', 'downtime', 'error_budget']);
 		$load_root_cause = in_array('root_cause', $cols, true);
+		if (in_array($filter['sort'] ?? 'name', ['sla', 'slo', 'sla_name', 'uptime', 'downtime', 'error_budget'], true)) {
+			$load_sla = true;
+		}
 
 		if (!empty($filter['only_with_sla']) && $sla_data_prefetch) {
 			$sla_data = array_intersect_key($sla_data_prefetch, array_flip($visible_service_ids));
@@ -226,11 +203,19 @@ abstract class CControllerTreeService extends CController {
 		}
 		unset($service);
 
-		$root_causes = $load_root_cause ? $this->getRootCauses($services_by_id, $visible_service_ids) : [];
 		foreach ($services_by_id as $serviceid => &$service) {
-			$service['root_causes'] = $root_causes[$serviceid] ?? [];
+			if (!$service['children']) {
+				continue;
+			}
+			usort($service['children'], function($a, $b) use ($services_by_id, $filter) {
+				return $this->compareServices($services_by_id, $a, $b, $filter);
+			});
 		}
 		unset($service);
+
+		usort($root_services, function($a, $b) use ($services_by_id, $filter) {
+			return $this->compareServices($services_by_id, $a, $b, $filter);
+		});
 
 		$status_summary = [
 			-1 => 0,
@@ -327,6 +312,50 @@ abstract class CControllerTreeService extends CController {
 		}
 
 		return array_keys($visible);
+	}
+
+	private function compareServices(array $services_by_id, $a, $b, array $filter): int {
+		$sort = $filter['sort'] ?? 'name';
+		$order = $filter['sortorder'] ?? ZBX_SORT_UP;
+		$value_a = $this->getSortValue($services_by_id[$a] ?? [], $sort);
+		$value_b = $this->getSortValue($services_by_id[$b] ?? [], $sort);
+		$direction = ($order === 'DESC') ? -1 : 1;
+		if ($value_a === null && $value_b === null) {
+			return 0;
+		}
+		if ($value_a === null) {
+			return 1 * $direction;
+		}
+		if ($value_b === null) {
+			return -1 * $direction;
+		}
+		if (is_string($value_a) || is_string($value_b)) {
+			return strnatcasecmp((string) $value_a, (string) $value_b) * $direction;
+		}
+		if ($value_a == $value_b) {
+			return 0;
+		}
+		return ($value_a < $value_b ? -1 : 1) * $direction;
+	}
+
+	private function getSortValue(array $service, string $sort) {
+		switch ($sort) {
+			case 'sla':
+				return isset($service['sla']['sli']) ? (float) $service['sla']['sli'] : null;
+			case 'slo':
+				return isset($service['sla']['slo']) ? (float) $service['sla']['slo'] : null;
+			case 'sla_name':
+				return $service['sla']['sla_name'] ?? null;
+			case 'uptime':
+				return $service['sla']['uptime_sec'] ?? null;
+			case 'downtime':
+				return $service['sla']['downtime_sec'] ?? null;
+			case 'error_budget':
+				return $service['sla']['error_budget_sec'] ?? null;
+			case 'name':
+			default:
+				return $service['name'] ?? null;
+		}
 	}
 
 	private function buildServicePath(array $services_by_id, $serviceid): array {
@@ -541,7 +570,6 @@ abstract class CControllerTreeService extends CController {
 		if (!array_key_exists('only_with_sla', $input)) {
 			$input['only_with_sla'] = 0;
 		}
-
 		if (!array_key_exists('cols', $input) || !is_array($input['cols'])) {
 			$input['cols'] = self::FILTER_FIELDS_DEFAULT['cols'];
 		}

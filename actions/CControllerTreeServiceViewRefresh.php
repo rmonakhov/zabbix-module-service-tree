@@ -41,6 +41,7 @@ class CControllerTreeServiceViewRefresh extends CControllerTreeServiceView {
 			->removeArgument('page');
 
 		$data = [
+			'last_refreshed' => time(),
 			'filter' => $filter,
 			'view_curl' => $view_url,
 			'sort' => $filter['sort'],

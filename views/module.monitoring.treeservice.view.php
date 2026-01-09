@@ -36,8 +36,13 @@ $this->enableLayoutModes();
 $web_layout_mode = $this->getLayoutMode();
 
 $controls_list = new CList();
+
+$last_refreshed = $data['last_refreshed'] ?? time();
+$controls_list->addItem((new CDiv(_('Last refreshed: ').zbx_date2str(DATE_TIME_FORMAT, $last_refreshed)))
+	->addClass('last-refreshed'));
+
 $controls_list->addItem(
-	(new CLink(_('Export Excel'), '#'))
+	(new CLink(_('Export CSV'), '#'))
 		->addClass(ZBX_STYLE_BTN)
 		->addClass('js-export-csv')
 );
