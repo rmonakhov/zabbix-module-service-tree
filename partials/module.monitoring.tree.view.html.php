@@ -139,7 +139,7 @@ function addServiceRow(array $data, array &$rows, string $serviceid, int $level,
 
 	$sli = $service['sla']['sli'];
 	$slo = $service['sla']['slo'] ?? null;
-	$sla_percent = ($sli !== null) ? ($sli . '%') : '-';
+	$sla_percent = ($sli !== null) ? (number_format((float) $sli, 2, '.', '') . '%') : '-';
 	$slo_percent = ($slo !== null) ? ($slo . '%') : '-';
 	$slo_class = '';
 	if ($sli !== null && $slo !== null) {
