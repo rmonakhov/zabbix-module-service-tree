@@ -119,7 +119,7 @@ $data['filter_options'] = null;
 $widget->addItem((new CForm())->setName('host_view')->addClass('is-loading'));
 $widget->show();
 
-$this->addCssFile('modules/zabbix-module-hosts-tree/views/css/treeservice.css');
+$this->addCssFile('modules/zabbix-module-service-tree/views/css/treeservice.css');
 
 (new CScriptTag('
 	view.init('.json_encode([

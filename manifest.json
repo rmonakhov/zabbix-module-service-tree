@@ -4,9 +4,8 @@
     "name": "Services tree",
     "version": "7.0.1",
     "namespace": "ModTreeService",
-    "author": "Evgeny Yurchenko",
-    "url": "https://bgmot.com",
-    "description": "Show services as a tree under Monitoring -> Services tree menu item",
+    "author": "Manuel Pesenti",
+    "description": "Show services as a tree under Service -> Services tree menu item",
     "actions": {
         "treeservice.view": {
             "class": "CControllerTreeServiceView",
