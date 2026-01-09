@@ -167,7 +167,12 @@ abstract class CControllerTreeService extends CController {
 			return strnatcasecmp($name_a, $name_b);
 		});
 
-		$sla_data = $this->getSlaDataForServices(array_keys($services_by_id));
+		$visible_service_ids = $this->collectVisibleServiceIds($services_by_id, $root_services);
+		$cols = $filter['cols'] ?? [];
+		$load_sla = array_intersect($cols, ['sla', 'slo', 'sla_name', 'uptime', 'downtime', 'error_budget']);
+		$load_root_cause = in_array('root_cause', $cols, true);
+
+		$sla_data = $load_sla ? $this->getSlaDataForServices($visible_service_ids) : [];
 		foreach ($services_by_id as $serviceid => &$service) {
 			if (array_key_exists($serviceid, $sla_data)) {
 				$service['sla'] = $sla_data[$serviceid];
@@ -188,7 +193,7 @@ abstract class CControllerTreeService extends CController {
 		}
 		unset($service);
 
-		$root_causes = $this->getRootCauses($services_by_id);
+		$root_causes = $load_root_cause ? $this->getRootCauses($services_by_id, $visible_service_ids) : [];
 		foreach ($services_by_id as $serviceid => &$service) {
 			$service['root_causes'] = $root_causes[$serviceid] ?? [];
 		}
@@ -267,6 +272,28 @@ abstract class CControllerTreeService extends CController {
 		}
 
 		return array_keys($missing);
+	}
+
+	private function collectVisibleServiceIds(array $services_by_id, array $root_services): array {
+		$visible = [];
+		$stack = $root_services;
+
+		while ($stack) {
+			$serviceid = array_shift($stack);
+			if (!array_key_exists($serviceid, $services_by_id)) {
+				continue;
+			}
+
+			$visible[$serviceid] = true;
+			$service = $services_by_id[$serviceid];
+			if (!$service['is_collapsed'] && $service['children']) {
+				foreach ($service['children'] as $child_id) {
+					$stack[] = $child_id;
+				}
+			}
+		}
+
+		return array_keys($visible);
 	}
 
 	private function buildServicePath(array $services_by_id, $serviceid): array {
@@ -362,7 +389,10 @@ abstract class CControllerTreeService extends CController {
 		return $slis_by_service;
 	}
 
-	private function getRootCauses(array $services_by_id): array {
+	private function getRootCauses(array $services_by_id, array $service_ids = []): array {
+		if ($service_ids) {
+			$services_by_id = array_intersect_key($services_by_id, array_flip($service_ids));
+		}
 		if (!$services_by_id) {
 			return [];
 		}
