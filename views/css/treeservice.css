@@ -1,0 +1,86 @@
+.treeview {
+  display: inline-block;
+  width: 14px;
+  height: 16px;
+  min-height: auto;
+  line-height: 16px;
+  padding: 0;
+  margin: 0 2px 0 0;
+  cursor: auto;
+  text-align: center;
+  border: 0;
+  background-color: transparent; }
+  .treeview .arrow-right {
+    border-left-color: #768d99; }
+  .treeview .arrow-down {
+    margin: 0 0 2px;
+    border-top-color: #768d99; }
+  .treeview:hover, .treeview:focus {
+    background-color: transparent; }
+    .treeview:hover .arrow-right, .treeview:focus .arrow-right {
+      border-left-color: #0275b8; }
+    .treeview:hover .arrow-down, .treeview:focus .arrow-down {
+      border-top-color: #0275b8; }
+
+.service-filter {
+  margin: 8px 0 12px; }
+
+.service-filter-row label {
+  margin-right: 6px; }
+
+.service-filter-row .textbox {
+  margin-right: 8px; }
+
+.service-filter-row .btn-alt {
+  margin: 0 5px 0 5px; }
+
+.filter-columns {
+  margin: 8px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 6px 12px; }
+
+.filter-columns > li {
+  margin: 0; }
+
+.filter-columns label {
+  margin-left: 6px; }
+
+.filter-columns .list-item {
+  display: flex;
+  align-items: center; }
+
+.filter-status {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 6px 12px; }
+
+.filter-status .list-item {
+  display: flex;
+  align-items: center; }
+
+.filter-forms-footer {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px; }
+
+.tree-actions .btn-alt {
+  margin: 0 5px 0 0; }
+
+.root-cause-item {
+  display: block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; }
+
+.root-cause-more {
+  display: block;
+  color: #768d99; }
+
+
+
+.tree-actions {
+  margin: 10px 0 10px 0;
+}

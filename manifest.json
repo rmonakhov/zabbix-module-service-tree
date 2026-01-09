@@ -1,0 +1,21 @@
+{
+    "manifest_version": 2.0,
+    "id": "treeservices",
+    "name": "Services tree",
+    "version": "7.0.1",
+    "namespace": "ModTreeService",
+    "author": "Evgeny Yurchenko",
+    "url": "https://bgmot.com",
+    "description": "Show services as a tree under Monitoring -> Services tree menu item",
+    "actions": {
+        "treeservice.view": {
+            "class": "CControllerTreeServiceView",
+            "view": "module.monitoring.treeservice.view"
+        },
+        "treeservice.view.refresh": {
+            "class": "CControllerTreeServiceViewRefresh",
+            "view": "module.monitoring.treeservice.view.refresh",
+            "layout": "layout.json"
+        }
+    }
+}
