@@ -26,6 +26,35 @@ $table = (new CTableInfo())->addClass('services-tree');
 
 $view_url = $data['view_curl']->getUrl();
 
+$status_options = [
+	-1 => ['label' => _('OK'), 'class' => ZBX_STYLE_GREEN],
+	0 => ['label' => _('Not classified'), 'class' => CSeverityHelper::getStatusStyle(0)],
+	1 => ['label' => _('Information'), 'class' => CSeverityHelper::getStatusStyle(1)],
+	2 => ['label' => _('Warning'), 'class' => CSeverityHelper::getStatusStyle(2)],
+	3 => ['label' => _('Average'), 'class' => CSeverityHelper::getStatusStyle(3)],
+	4 => ['label' => _('High'), 'class' => CSeverityHelper::getStatusStyle(4)],
+	5 => ['label' => _('Disaster'), 'class' => CSeverityHelper::getStatusStyle(5)]
+];
+$status_summary = $data['status_summary'] ?? [];
+$status_list = new CList();
+$total_count = array_sum($status_summary);
+$status_list->addItem(
+	(new CListItem([
+		(new CSpan(_('Total')))->addClass('status-summary-label'),
+		(new CSpan($total_count))->addClass('status-summary-count')->addClass('status-summary-total')
+	]))->addClass('status-summary-item')
+);
+foreach ($status_options as $status_value => $meta) {
+	$count = $status_summary[$status_value] ?? 0;
+	$status_list->addItem(
+		(new CListItem([
+			(new CSpan($meta['label']))->addClass('status-summary-label'),
+			(new CSpan($count))->addClass('status-summary-count')->addClass($meta['class'])
+		]))->addClass('status-summary-item')
+	);
+}
+$status_list->addClass('status-summary');
+
 $table->setHeader([
 	make_sorting_header(_('Name'), 'name', $data['sort'], $data['sortorder'], $view_url),
 	(new CColHeader(_('Status'))),
@@ -45,6 +74,8 @@ foreach ($data['root_services'] as $serviceid) {
 		$table->addRow($row);
 	}
 }
+
+$form->addItem((new CDiv($status_list))->addClass('status-summary-wrap'));
 
 $expand_all = (new CButton('expand_all', _('Expand all')))
 	->addClass(ZBX_STYLE_BTN_ALT)
@@ -144,9 +175,36 @@ function addServiceRow(array $data, array &$rows, string $serviceid, int $level,
 	if ($error_budget_sec !== null && $error_budget_sec < 0) {
 		$error_budget_style = 'color: #f0ad4e;';
 	}
+	$path_names = $service['path_names'] ?? [];
+	$breadcrumb_parts = $path_names;
+	$breadcrumb_parts[] = $service['name'];
+	$breadcrumb_text = implode(' / ', $breadcrumb_parts);
+
+	$root_cause_export = '';
+	if (array_key_exists('root_causes', $service) && $service['root_causes']) {
+		$export_names = [];
+		foreach ($service['root_causes'] as $problem) {
+			$problem_name = $problem['name'] ?? '';
+			if ($problem_name === '') {
+				continue;
+			}
+			$export_names[] = $problem_name;
+		}
+		if ($export_names) {
+			$root_cause_export = implode(' | ', $export_names);
+		}
+	}
+
 	$root_cause_items = [];
 	if (array_key_exists('root_causes', $service) && $service['root_causes']) {
 		$problems = $service['root_causes'];
+		$all_problem_names = [];
+		foreach ($problems as $problem) {
+			$problem_name = $problem['name'] ?? '';
+			if ($problem_name !== '') {
+				$all_problem_names[] = $problem_name;
+			}
+		}
 		$max_show = 3;
 		$shown = array_slice($problems, 0, $max_show);
 		$remaining = count($problems) - count($shown);
@@ -178,7 +236,10 @@ function addServiceRow(array $data, array &$rows, string $serviceid, int $level,
 		}
 
 		if ($remaining > 0) {
-			$root_cause_items[] = (new CSpan('['.$remaining.' more problem]'))
+			$more_link = (new CLink('['.$remaining.' more problem]'))
+				->addClass(ZBX_STYLE_LINK_ALT)
+				->setHint(implode("\n", $all_problem_names), ZBX_STYLE_HINTBOX_WRAP);
+			$root_cause_items[] = (new CSpan($more_link))
 				->addClass('root-cause-more');
 		}
 	}
@@ -199,6 +260,9 @@ function addServiceRow(array $data, array &$rows, string $serviceid, int $level,
 			->setAttribute('data-col', 'error_budget'),
 		(new CCol($root_cause_items))->setAttribute('data-col', 'root_cause')
 	]);
+	$table_row
+		->setAttribute('data-name-path', $breadcrumb_text)
+		->setAttribute('data-root-causes', $root_cause_export);
 
 	if ($parent_collapsed) {
 		$table_row->addClass(ZBX_STYLE_DISPLAY_NONE);

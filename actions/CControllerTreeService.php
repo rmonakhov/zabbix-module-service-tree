@@ -194,9 +194,26 @@ abstract class CControllerTreeService extends CController {
 		}
 		unset($service);
 
+		$status_summary = [
+			-1 => 0,
+			0 => 0,
+			1 => 0,
+			2 => 0,
+			3 => 0,
+			4 => 0,
+			5 => 0
+		];
+		foreach ($services_by_id as $service) {
+			$status_value = (int)($service['status_calc'] ?? $service['status']);
+			if (array_key_exists($status_value, $status_summary)) {
+				$status_summary[$status_value]++;
+			}
+		}
+
 		return [
 			'root_services' => $root_services,
-			'services' => $services_by_id
+			'services' => $services_by_id,
+			'status_summary' => $status_summary
 		];
 	}
 

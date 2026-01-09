@@ -35,11 +35,19 @@ $this->includeJsFile('monitoring.service.view.js.php');
 $this->enableLayoutModes();
 $web_layout_mode = $this->getLayoutMode();
 
+$controls_list = new CList();
+$controls_list->addItem(
+	(new CLink(_('Export Excel'), '#'))
+		->addClass(ZBX_STYLE_BTN)
+		->addClass('js-export-csv')
+);
+$controls_list->addItem(get_icon('kioskmode', ['mode' => $web_layout_mode]));
+
 $widget = (new CHtmlPage())
 	->setTitle(_('Services tree'))
 	->setWebLayoutMode($web_layout_mode)
 	->setControls(
-		(new CTag('nav', true, (new CList())->addItem(get_icon('kioskmode', ['mode' => $web_layout_mode]))))
+		(new CTag('nav', true, $controls_list))
 			->setAttribute('aria-label', _('Content controls'))
 	);
 

@@ -63,6 +63,7 @@
 			this.initTabFilter(filter_options);
 			this.initFilterControls();
 			this.initFilterToggle();
+			this.initExportCsv();
 
 			this.host_view_form = $('form[name=host_view]');
 			this.running = true;
@@ -339,6 +340,84 @@
 				event.preventDefault();
 				$container.toggleClass('is-collapsed');
 			});
+		},
+
+		initExportCsv() {
+			const $button = $('.js-export-csv');
+			if (!$button.length) {
+				return;
+			}
+			$button.off('click.treeservice_export').on('click.treeservice_export', (event) => {
+				event.preventDefault();
+				this.exportTableCsv();
+			});
+		},
+
+		exportTableCsv() {
+			const $table = $('.services-tree');
+			if (!$table.length) {
+				return;
+			}
+			const rows = [];
+			const header = [];
+			const keys = [];
+			$table.find('thead th').each(function() {
+				if (!$(this).is(':visible')) {
+					return;
+				}
+				const key = $(this).data('col') || $(this).text().trim().toLowerCase();
+				keys.push(key);
+				header.push($(this).text().trim());
+			});
+			rows.push(header);
+			$table.find('tbody tr').each(function() {
+				const $row = $(this);
+				const row = [];
+				let colIndex = 0;
+				$row.find('td').each(function() {
+					if (!$(this).is(':visible')) {
+						return;
+					}
+					const key = keys[colIndex] || '';
+					let value = $(this).text().replace(/\s+/g, ' ').trim();
+					if (key === 'name') {
+						const path = $row.data('name-path');
+						if (path) {
+							value = String(path);
+						}
+					}
+					if (key === 'root_cause') {
+						const rootCauses = $row.data('root-causes');
+						value = rootCauses ? String(rootCauses) : '';
+					}
+					if (value === '-') {
+						value = '';
+					}
+					row.push(value);
+					colIndex++;
+				});
+				rows.push(row);
+			});
+			const csv = rows.map(r => r.map(this.csvEscape).join(',')).join('\n');
+			const bom = '\ufeff';
+			const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = 'services_tree.csv';
+			link.style.display = 'none';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(url);
+		},
+
+		csvEscape(value) {
+			const stringValue = String(value ?? '');
+			if (/[",\n]/.test(stringValue)) {
+				return '"' + stringValue.replace(/"/g, '""') + '"';
+			}
+			return stringValue;
 		},
 
 		initFilterControls() {
